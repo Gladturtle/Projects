@@ -9,8 +9,7 @@ def display_board(board):
     print("_ _ _ _ _ _ _ _ _ _")
     print("   {}  |  {}  |  {} ".format(pos[6],pos[7],pos[8]))
 
-# test_board = ['#','X','O','X','O','X','O','X','O','X']
-# display_board(test_board)
+
 
 def player_input(lastchoice):
     mydict = {"X":"O","O":"X"}
@@ -22,8 +21,6 @@ def player_input(lastchoice):
 def place_marker(board, marker, position):
     board[position-1] = marker
 
-# place_marker(test_board,'$',8)
-# display_board(test_board)
 
 def win_check(board):
     if board[0]==board[3]==board[6]!=' ' or board[1]==board[4]==board[7]!=' ' or board[2]==board[5]==board[8]!=' ' or board[0]==board[1]==board[2]!=' ' or board[3]==board[4]==board[5]!=' ' or board[6]==board[7]==board[8]!=' ' or board[0]==board[4]==board[8]!=' ' or board[2]==board[4]==board[6]!=' ':
@@ -32,7 +29,7 @@ def win_check(board):
 
 
 
-# win_check(test_board)
+
 
 
 import random
