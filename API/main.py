@@ -1,8 +1,9 @@
 import PIL.Image
-from flask import Flask, render_template,make_response
+from flask import Flask, render_template,make_response,abort
 from flask_restful import Api,Resource,fields
 from flask_sqlalchemy import SQLAlchemy
-import os,random,PIL
+from sqlalchemy import exc
+import os,random
 
 app = Flask(__name__)
 api = Api(app)
@@ -23,15 +24,27 @@ class Image(Resource):
         list_of_dir = os.listdir('.\\static')
         img_name = list_of_dir[random.randint(0,len(list_of_dir)-1)]
         return make_response(render_template('image.html', img = '.\\static\\'+img_name),200,headers)
-    def post(self):
+    def put(self):
         list_of_dir = os.listdir('.\\static')
         i = 0
         for image in list_of_dir:
-            img = PIL.Image.open('.\\static\\'+image)
-            image = ImageModel(id =i, img=img)
-            db.session.add(image)
-            db.session.commit()
-            return '',201
+            try:
+                img = PIL.Image.open('.\\static\\'+image)
+                img = img.tobytes()
+                image = ImageModel(id =i, img=img)
+                db.session.add(image)
+                db.session.commit()
+            except exc.IntegrityError :
+                abort(404,'Already populated')
+        i +=1
+        return '',201
+    def post(self):
+        return '',201
+    def delete(self):
+        img = ImageModel.query.get(0)
+        db.session.delete(img)
+        db.session.commit()
+        return '',200
 
 
         
@@ -49,7 +62,7 @@ class Images(Resource):
 
 
 
-api.add_resource(Image,"/random_image")
+api.add_resource(Image,"/random-image")
 api.add_resource(Images,'/all-images')
 if __name__ == "__main__":
     app.run(debug=True)
