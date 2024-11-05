@@ -1,7 +1,9 @@
 
-from IPython.display import clear_output
+import os
+import random
 
 def display_board(board):
+    os.system('cls')
     pos = board
     print("   {}  |  {}  |  {} ".format(pos[0],pos[1],pos[2]))
     print("_ _ _ _ _ _ _ _ _ _")
@@ -28,16 +30,12 @@ def win_check(board):
     return False
 
 
-
-
-
-
-import random
-
 def choose_first():
      return random.randint(1,2)
  
 def space_check(board, position):
+    if position>9:
+        return True
     if board[position-1]==" ":
         return False
     else:
@@ -79,6 +77,7 @@ while playagain:#while True:
     display_board(board) # Set the game up here
     lastchoice = choose_first()
     lastchoice = thedict[lastchoice]
+    wincheck = False
     while wincheck == False:
         choice = player_input(lastchoice)
         lastchoice = choice

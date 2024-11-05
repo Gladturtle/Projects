@@ -1,5 +1,5 @@
 import requests
-from flask import Flask, render_template,make_response,send_file,abort
+from flask import Flask, render_template,make_response,send_file,abort,redirect,request
 from flask_restful import Api,Resource,fields,reqparse,marshal_with
 from flask_sqlalchemy import SQLAlchemy
 import random
@@ -17,9 +17,11 @@ class ImageModel(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     img = db.Column(db.BLOB,primary_key = False)
 
+class UserModel(db.Model):
+    usname = db.Column(db.String,primary_key = True)
+    password = db.Column(db.String)
+
 resource_field = {'img':fields.Raw}
-app.app_context().push()
-db.create_all()
 
 class Image(Resource):
     def get(self,id):
@@ -31,7 +33,7 @@ class Image(Resource):
         try:
             id = db.session.query(ImageModel.id).order_by(ImageModel.id.desc()).first()[0]+1
         except:
-            id = 0
+            id = 1
         args = image_put_img.parse_args()
         image = args['img']
         image = open(image, 'rb').read()
@@ -47,7 +49,14 @@ class Image(Resource):
         db.session.commit()
         return '',200
 
-
+class Login(Resource):
+    def get(self):
+        headers = {'Content-Type':'text/html'}
+        return make_response(render_template('login.html',results = 'login.form'),200,headers)
+    def post(self):
+        usname = request.form.get('username')
+        password = request.form.get('password')
+        
         
 
 
@@ -67,5 +76,7 @@ class Images(Resource):
 
 api.add_resource(Image,"/image/<int:id>")
 api.add_resource(Images,'/all-images')
+api.add_resource(Login,"/login" )
+
 if __name__ == "__main__":
     app.run(debug=True)
