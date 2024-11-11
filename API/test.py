@@ -3,5 +3,5 @@ import requests,os
 #for dir in list_of_dir:
   #  print('D:\\Programs\\Python\\Projects\\API\\static\\'+dir)
    # request = requests.put('http://127.0.0.1:5000/image/1',json={'img':'D:\\Programs\\Python\\Projects\\API\\static\\'+dir})
-request = requests.delete('http://127.0.0.1:5000/image/90')
+request = requests.delete('http://127.0.0.1:5000/signup')
 print(request.json())
