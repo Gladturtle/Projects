@@ -13,7 +13,7 @@ api = Api(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SECRET_KEY'] = 'bacaa3381e4c453088449ccd04f270cf'
 db = SQLAlchemy(app)
-add = '192.168.15.69'
+add = '127.0.0.1:5000'
 
 
 image_put_img = reqparse.RequestParser()
@@ -51,12 +51,26 @@ def token_required(func):
             abort(400,'Token Expired. Please log-in again')
         if token['user']['perm'] == "N":
             for method in resmethods:
-                if func.__name__ == method.__name__ and func.__module__ == method.__module__:
+                if func.__qualname__ == method.__qualname__:
                     abort(401,'You do not have the authority to do this. This could stem from the fact that your parents abandoned you when you were 3')
+                else:
+                    continue
         return func(*args,**kwargs)
     return decorated
     
-
+class Home(Resource):
+    @token_required
+    def get(self):
+        headers = {'Content-Type':'text/html'}
+        token = request.args.get('token')
+        return make_response(render_template('home.html',token = token),200,headers)
+    @token_required
+    def post(self):
+        token = request.args.get('token')
+        button = request.form.get('button')
+        if  button =='All-Images':
+            return redirect('http://'+add+'/all-images/?token='+token,302)
+        return {'message':'gay ballsack'}
 
 class Image(Resource):
     @token_required
@@ -86,6 +100,8 @@ class Image(Resource):
         db.session.delete(img)
         db.session.commit()
         return '',200
+    
+
 class Images(Resource):
     @token_required
     def get(self):
@@ -94,11 +110,9 @@ class Images(Resource):
         id = db.session.query(ImageModel.id).order_by(ImageModel.id.desc()).first()[0]+1
         list_of_req = []
         for i in range(1,id):
-            list_of_req.append('http://'+add+':5000/image/'+str(i)+'/?token='+token)
-            requests.get('http://'+add+':5000/image/'+str(i)+'/?token='+token)
+            list_of_req.append('http://'+add+'/image/'+str(i)+'/?token='+token)
+            requests.get('http://'+add+'/image/'+str(i)+'/?token='+token)
         return make_response(render_template('images.html', img = list_of_req),200,headers)
-
-
 
 
 class Login(Resource):
@@ -111,6 +125,21 @@ class Login(Resource):
         user = UserModel.query.get(usname)
         if not user:
             abort(400,"No such user")
+        user = LoginAttempts.query.get(usname)
+        if user.attempts >5 and user.time==None:
+            exptime = datetime.datetime.now()+datetime.timedelta(minutes=5)
+            user.time = str(exptime)
+            db.session.commit()
+            return redirect('http://'+add+'/loginfailed/'+user.usname,302)
+        if user.time!= None:
+            time = datetime.datetime.strptime(user.time,'%Y-%m-%d %H:%M:%S.%f')
+            if time>datetime.datetime.now():
+                return redirect('http://'+add+'/loginfailed/'+user.usname,302)
+            else:
+                user.time = None
+                user.attempts = 0
+                db.session.commit()
+        user = UserModel.query.get(usname)
         if user.usname==usname and user.password==password:
             time = datetime.datetime.now(datetime.UTC)+datetime.timedelta(hours=2)
             login = LoginAttempts.query.get(usname)
@@ -119,13 +148,23 @@ class Login(Resource):
             token = jwt.encode({'user':marshal(user,resource_field_user),
                                 'expiration':str(time)},
                                 app.config['SECRET_KEY'])
-            return {"token":token}
+            return redirect('http://'+add+'/home/?token='+token,302)
         elif user.usname==usname and user.password!=password:
             user = LoginAttempts.query.get(usname)
             user.attempts +=1
             db.session.commit()
-            return redirect('http://'+add+':5000/login',302)
+            return redirect('http://'+add+'/login',302)
+        
+class LoginFailed(Resource):
+    def get(self,usname):
+        headers = {'Content-Type':'text/html'}
+        user = LoginAttempts.query.get(usname)
+        timeleft = datetime.datetime.strptime(user.time,'%Y-%m-%d %H:%M:%S.%f')-datetime.datetime.now()
+        timeleft = datetime.timedelta(seconds = timeleft.seconds)
 
+        if timeleft> datetime.timedelta(seconds=300):
+            timeleft = 'now'
+        return make_response(render_template('loginfailed.html',timeleft = timeleft ),200,headers)
                
 class Signup(Resource):
     @token_required
@@ -152,9 +191,11 @@ class Signup(Resource):
          
         
 api.add_resource(Image,"/image/<int:id>/")
+api.add_resource(Home,'/home/')
 api.add_resource(Images,'/all-images/')
 api.add_resource(Login,"/login" )
 api.add_resource(Signup,"/signup/")
+api.add_resource(LoginFailed,'/loginfailed/<string:usname>')
 
 if __name__ == "__main__":
-    app.run(debug = True,host= add)
+    app.run(debug = True)
