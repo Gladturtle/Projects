@@ -31,19 +31,3 @@ The `Wikipedia_scraper.py` file is a simple web scraper that downloads images fr
 
 ### Usage
 Run the `Wikipedia_scraper.py` script and provide the URL of the Wikipedia article, the directory to save the images, and the base name for the images when prompted
-
-## 5. Product Manager
-
-### Description
-The `Product_inventory.py` script uses Python to manage a warehouse of products, along with an interactive GUI from the Tkinter library and a interactive Pie Plot using the Matplotlib library.
-
-### Usage
-Run the `Product_inventory.py` script and follow the instuctions provided on the buttons and on the page itself.
-
-## 6. API
-
-### Description
-The `main.py` script uses Flask-Restful library in order to display the images in the `static` folder. Currently working on implementation with a SQL database found in the `instance` folder labeled `database.db`.
-
-## Usage
-Run the `main.py` script and open a website in [http://127.0.0.1:5000/all-images] or [http://127.0.0.1:5000/random_image]
